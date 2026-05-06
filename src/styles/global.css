@@ -2,35 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ─── Local font faces ──────────────────────────────────────────────
-   Real font files live in /public/fonts. */
-
-/* Roboto Slab Variable (Apache 2.0) — heading slab serif.
-   Self-hosted. Stand-in for Adelle until a TypeTogether license is procured. */
-@font-face {
-  font-family: "Roboto Slab Variable";
-  src: url("/fonts/RobotoSlab-Variable.woff2") format("woff2-variations");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-/* DM Sans Variable (Google Fonts, OFL) — body text. Self-hosted. */
-@font-face {
-  font-family: "DM Sans Variable";
-  src: url("/fonts/DMSans-Variable.woff2") format("woff2-variations");
-  font-weight: 100 1000;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "DM Sans Variable";
-  src: url("/fonts/DMSans-Variable-Italic.woff2") format("woff2-variations");
-  font-weight: 100 1000;
-  font-style: italic;
-  font-display: swap;
-}
+/* @font-face declarations live in src/layouts/Base.astro so the font
+   URLs can be prefixed with import.meta.env.BASE_URL at build time. */
 
 @layer base {
   :root {

@@ -4,7 +4,7 @@ import tailwind from "@astrojs/tailwind";
 export default defineConfig({
   output: "static",
   site: "https://bryan-odhiambo.github.io",
-  base: "/cresthaven",
+  base: "/project-olympus",
   integrations: [
     tailwind({
       applyBaseStyles: false,

@@ -12,6 +12,8 @@ const {
   title = `${meta.project} — ${meta.subtitle}`,
   description = "An institutional carve-out investment opportunity. CrestHaven Capital. Strictly Private & Confidential.",
 } = Astro.props;
+
+const base = import.meta.env.BASE_URL;
 ---
 
 <!doctype html>
@@ -26,20 +28,48 @@ const {
 
     <title>{title}</title>
 
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${base}favicon.svg`} />
+
+    {/* Inline @font-face with base-relative URLs so fonts resolve correctly
+        on any sub-path deployment (GitHub Pages, etc.). CSS url("/fonts/...")
+        is not rewritten by Vite when the path starts with "/", so we inject
+        these declarations dynamically using the runtime BASE_URL. */}
+    <style set:html={`
+      @font-face {
+        font-family: "Roboto Slab Variable";
+        src: url("${base}fonts/RobotoSlab-Variable.woff2") format("woff2-variations");
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Sans Variable";
+        src: url("${base}fonts/DMSans-Variable.woff2") format("woff2-variations");
+        font-weight: 100 1000;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Sans Variable";
+        src: url("${base}fonts/DMSans-Variable-Italic.woff2") format("woff2-variations");
+        font-weight: 100 1000;
+        font-style: italic;
+        font-display: swap;
+      }
+    `} />
 
     {/* Preload critical-path faces — body (DM Sans) and heading (Roboto Slab).
         crossorigin is required for woff2 preload to be honored. */}
     <link
       rel="preload"
-      href="/fonts/DMSans-Variable.woff2"
+      href={`${base}fonts/DMSans-Variable.woff2`}
       as="font"
       type="font/woff2"
       crossorigin
     />
     <link
       rel="preload"
-      href="/fonts/RobotoSlab-Variable.woff2"
+      href={`${base}fonts/RobotoSlab-Variable.woff2`}
       as="font"
       type="font/woff2"
       crossorigin

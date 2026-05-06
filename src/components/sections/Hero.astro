@@ -11,9 +11,9 @@ import { meta } from "../../content/deck-data";
       items-start so the top of the logo and the top of the eyebrow
       text on the right land on the same horizontal line. */}
   <div class="shell flex items-start justify-between">
-    <a href="/" aria-label="CrestHaven Capital — home" class="block">
+    <a href={import.meta.env.BASE_URL} aria-label="CrestHaven Capital — home" class="block">
       <img
-        src="/images/cresthaven-logo.png"
+        src={`${import.meta.env.BASE_URL}images/cresthaven-logo.png`}
         alt="CrestHaven Capital"
         width="298"
         height="176"
@@ -134,7 +134,7 @@ import { meta } from "../../content/deck-data";
     const canvas = document.querySelector<HTMLCanvasElement>(
       "[data-hero-plane-canvas]",
     );
-    if (canvas) initHeroPlane3D(canvas);
+    if (canvas) initHeroPlane3D(canvas, `${import.meta.env.BASE_URL}models/plane-a340.glb`);
   }
 
   if (document.readyState === "loading") {
