@@ -74,5 +74,5 @@ import { asset } from "../../content/deck-data";
   const canvas = document.querySelector<HTMLCanvasElement>(
     "[data-asset-plane-canvas]",
   );
-  if (canvas) initAssetPlane3D(canvas, `${import.meta.env.BASE_URL}models/plane-a340.glb`);
+  if (canvas) initAssetPlane3D(canvas, `${import.meta.env.BASE_URL.replace(/\/?$/, "/")}models/plane-a340.glb`);
 </script>
