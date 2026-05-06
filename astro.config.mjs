@@ -3,7 +3,7 @@ import tailwind from "@astrojs/tailwind";
 
 export default defineConfig({
   output: "static",
-  site: "https://blueprintbo.github.io",
+  site: "https://bryan-odhiambo.github.io",
   base: "/cresthaven",
   integrations: [
     tailwind({
