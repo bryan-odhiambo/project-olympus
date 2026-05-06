@@ -1,0 +1,192 @@
+---
+// Section registry — selector must match the data attribute on each section
+const SECTIONS = [
+  { selector: "[data-hero]",        label: "I · Overview" },
+  { selector: "[data-snapshot]",    label: "II · Snapshot" },
+  { selector: "[data-floor]",       label: "III · The Floor" },
+  { selector: "[data-phases]",      label: "IV · Value Creation" },
+  { selector: "[data-asset]",       label: "V · The Asset" },
+  { selector: "[data-scenario]",    label: "VI · The Numbers" },
+  { selector: "[data-transaction]", label: "VII · Transaction" },
+  { selector: "[data-ask]",         label: "VIII · The Ask" },
+  { selector: "[data-close]",       label: "IX · Close" },
+  { selector: "[data-disclosure]",  label: "X · Disclosure" },
+];
+---
+
+{/* ── Scroll progress bar ── */}
+<div
+  id="scroll-progress"
+  class="fixed left-0 top-0 z-[200] h-[2px] w-0 bg-accent origin-left"
+  aria-hidden="true"
+></div>
+
+{/* ── Sticky section label — top-left, fades in after hero ── */}
+<div
+  id="section-label"
+  class="fixed left-5 top-4 z-[150] hidden md:block font-sans text-[9px] uppercase tracking-label text-bone-dim"
+  aria-hidden="true"
+  style="opacity:0"
+></div>
+
+{/* ── Print / PDF button — top-right ── */}
+<button
+  data-print-btn
+  type="button"
+  class="fixed right-5 top-3 z-[150] hidden items-center gap-1.5 rounded border border-ink-300/50 bg-ink-50/80 px-2.5 py-1.5 backdrop-blur-sm transition-colors duration-200 hover:border-accent/50 hover:text-bone md:flex"
+  aria-label="Print or save as PDF"
+  onclick="window.print()"
+>
+  {/* Printer icon */}
+  <svg width="11" height="11" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <rect x="3" y="1" width="10" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/>
+    <path d="M3 6H1a1 1 0 00-1 1v5a1 1 0 001 1h2v2h10v-2h2a1 1 0 001-1V7a1 1 0 00-1-1h-2" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+    <rect x="3" y="10" width="10" height="5" rx="0.5" stroke="currentColor" stroke-width="1.4"/>
+    <circle cx="13" cy="8.5" r="0.85" fill="currentColor"/>
+  </svg>
+  <span class="font-sans text-[9px] uppercase tracking-label text-bone-dim">PDF</span>
+</button>
+
+{/* ── Side nav rail ── */}
+<nav
+  id="section-nav"
+  class="fixed right-5 top-1/2 z-[150] hidden -translate-y-1/2 flex-col gap-3.5 md:flex"
+  aria-label="Section navigation"
+>
+  {SECTIONS.map((s, i) => (
+    <button
+      type="button"
+      class="nav-btn group flex items-center justify-end outline-none"
+      data-nav-index={i}
+      data-nav-selector={s.selector}
+      aria-label={s.label}
+    >
+      {/* Label — slides in from right on hover */}
+      <span class="nav-label mr-2.5 whitespace-nowrap font-sans text-[9px] uppercase tracking-label text-bone-dim opacity-0 transition-all duration-200 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 group-focus-visible:opacity-100 group-focus-visible:translate-x-0">
+        {s.label}
+      </span>
+      {/* Dot */}
+      <span
+        class="nav-dot block h-[5px] w-[5px] rounded-full bg-ink-300 transition-all duration-300 group-hover:bg-bone group-focus-visible:bg-bone"
+      ></span>
+    </button>
+  ))}
+</nav>
+
+<style>
+  /* Active dot — terracotta, slightly larger */
+  .nav-btn[data-active="true"] .nav-dot {
+    background-color: var(--accent);
+    height: 7px;
+    width: 7px;
+  }
+  .nav-btn[data-active="true"] .nav-label {
+    color: var(--bone);
+    opacity: 1;
+    transform: translateX(0);
+  }
+</style>
+
+<script>
+  // ── Helpers ──────────────────────────────────────────────────────────
+  function getScrollTop(el: Element): number {
+    // If GSAP wrapped the section in a pin-spacer, scroll to the spacer top
+    const parent = el.parentElement;
+    if (parent?.classList.contains("pin-spacer")) {
+      return parent.getBoundingClientRect().top + window.scrollY;
+    }
+    return el.getBoundingClientRect().top + window.scrollY;
+  }
+
+  function smoothScrollTo(top: number) {
+    window.scrollTo({ top, behavior: "smooth" });
+  }
+
+  // ── DOM refs ─────────────────────────────────────────────────────────
+  const progressBar  = document.getElementById("scroll-progress") as HTMLElement;
+  const sectionLabel = document.getElementById("section-label") as HTMLElement;
+  const btns = Array.from(document.querySelectorAll<HTMLElement>(".nav-btn"));
+  const sectionEls: (Element | null)[] = btns.map((b) =>
+    document.querySelector(b.dataset.navSelector!)
+  );
+
+  // ── Active section detection ──────────────────────────────────────────
+  function getActiveIndex(): number {
+    const scrollMid = window.scrollY + window.innerHeight * 0.4;
+    let active = 0;
+    sectionEls.forEach((el, i) => {
+      if (!el) return;
+      const top = getScrollTop(el);
+      if (scrollMid >= top) active = i;
+    });
+    return active;
+  }
+
+  function updateDots() {
+    const active = getActiveIndex();
+    btns.forEach((btn, i) => {
+      btn.dataset.active = String(i === active);
+    });
+    // Sticky section label — appears after scrolling past ~40% of hero
+    if (sectionLabel) {
+      const pastHero = window.scrollY > window.innerHeight * 0.4;
+      sectionLabel.textContent = btns[active]?.getAttribute("aria-label") ?? "";
+      sectionLabel.style.opacity = pastHero ? "1" : "0";
+    }
+  }
+
+  // ── Progress bar ──────────────────────────────────────────────────────
+  function updateProgress() {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const pct = total > 0 ? (window.scrollY / total) * 100 : 0;
+    progressBar.style.width = `${pct}%`;
+  }
+
+  // ── Click navigation ──────────────────────────────────────────────────
+  btns.forEach((btn, i) => {
+    btn.addEventListener("click", () => {
+      const el = sectionEls[i];
+      if (el) smoothScrollTo(getScrollTop(el));
+    });
+  });
+
+  // ── Keyboard navigation ───────────────────────────────────────────────
+  document.addEventListener("keydown", (e) => {
+    // Skip if focus is in a form element
+    const tag = (document.activeElement as HTMLElement)?.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+
+    const isDown = e.key === "ArrowDown" || e.key === "PageDown";
+    const isUp   = e.key === "ArrowUp"   || e.key === "PageUp";
+    if (!isDown && !isUp) return;
+
+    e.preventDefault();
+    const current = getActiveIndex();
+    const next = isDown
+      ? Math.min(current + 1, sectionEls.length - 1)
+      : Math.max(current - 1, 0);
+
+    const el = sectionEls[next];
+    if (el) smoothScrollTo(getScrollTop(el));
+  });
+
+  // ── Scroll listener (rAF-throttled) ──────────────────────────────────
+  let rafPending = false;
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        updateProgress();
+        updateDots();
+        rafPending = false;
+      });
+    },
+    { passive: true }
+  );
+
+  // ── Init ──────────────────────────────────────────────────────────────
+  updateProgress();
+  updateDots();
+</script>

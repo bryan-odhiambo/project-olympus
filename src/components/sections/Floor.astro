@@ -1,0 +1,165 @@
+---
+import { revenueMix, demandAnchors, visibilityTotals } from "../../content/deck-data";
+
+// Bar geometry — full width is 100%, drawn proportionally
+const TONES = {
+  primary: "#FAF3E8", // cream — government, the dominant base
+  secondary: "#C4551E", // terracotta — VIP
+  tertiary: "#EC9C6B", // peach — aftermarket
+} as const;
+---
+
+<section
+  data-floor
+  class="relative w-full bg-ink-0 py-10 md:py-14"
+  aria-label="The Floor — revenue mix and demand anchors"
+>
+  <div class="shell">
+    {/* Header — eyebrow + headline */}
+    <div class="mb-10 grid grid-cols-1 gap-6 md:grid-cols-12">
+      <div class="md:col-span-7">
+        <span class="eyebrow">III · The Floor</span>
+        <h2 class="mt-4 max-w-[20ch] font-serif text-headline tracking-tightest">
+          Why the floor is real.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:col-span-5 md:self-end">
+        85% of revenue runs through cost-plus government programs in active execution.
+        The base is contracted, multi-year, and credit-quality — not estimated.
+      </p>
+    </div>
+
+    {/* Two-column asymmetric: 60/40 */}
+    <div class="grid grid-cols-1 gap-x-16 gap-y-20 md:grid-cols-12 md:gap-y-0">
+      {/* Left 60% — revenue mix bar chart */}
+      <div class="md:col-span-7">
+        <span class="eyebrow text-bone-dim">Revenue Mix · FY25A</span>
+        <div class="mt-8 reveal" data-floor-bars>
+          {revenueMix.map((row) => (
+            <div class="mb-9 last:mb-0">
+              <div class="mb-3 flex items-baseline justify-between">
+                <span class="font-serif text-base text-bone md:text-lg">
+                  {row.label}
+                </span>
+                <span class="nums font-sans text-sm text-bone-muted">
+                  {row.percent}%
+                </span>
+              </div>
+              {/* Track */}
+              <div class="relative h-px w-full bg-ink-300">
+                {/* Bar — animated scaleX, origin-left */}
+                <div
+                  data-floor-bar
+                  data-percent={row.percent}
+                  class="absolute left-0 top-1/2 h-[3px] -translate-y-1/2 origin-left scale-x-0"
+                  style={`width: ${row.percent}%; background-color: ${TONES[row.tone]};`}
+                ></div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Visibility math — contracted + pipeline = total */}
+        <div class="mt-16 hairline pt-10">
+          <span class="eyebrow text-bone-dim">Pipeline visibility</span>
+          <div class="mt-6 grid grid-cols-3 items-start gap-x-4 md:gap-x-8">
+            <div>
+              <div
+                data-floor-stat
+                data-target={visibilityTotals.contracted}
+                data-prefix="$"
+                data-suffix="M+"
+                class="stat-number text-3xl text-bone md:text-4xl"
+              >
+                ${visibilityTotals.contracted}M+
+              </div>
+              <div class="mt-2 font-sans text-[10px] uppercase tracking-label text-bone-muted">
+                Contracted Backlog
+              </div>
+            </div>
+            <div class="flex items-center justify-center -translate-x-8 pt-1">
+              <span class="font-sans text-2xl text-accent md:text-3xl" aria-hidden="true">+</span>
+            </div>
+            <div>
+              <div
+                data-floor-stat
+                data-target={visibilityTotals.pipeline}
+                data-prefix="$"
+                data-suffix="M+"
+                class="stat-number text-3xl text-bone md:text-4xl"
+              >
+                ${visibilityTotals.pipeline}M+
+              </div>
+              <div class="mt-2 font-sans text-[10px] uppercase tracking-label text-bone-muted">
+                Identified Pipeline
+              </div>
+            </div>
+          </div>
+          <div class="mt-10 grid grid-cols-3 gap-4 border-t border-ink-300 pt-6 md:gap-8">
+            <div class="col-span-2 flex items-baseline">
+              <span class="font-serif italic text-bone-muted">Total Visibility</span>
+            </div>
+            <div>
+              <span
+                data-floor-stat
+                data-target={(visibilityTotals.total / 1000)}
+                data-prefix="$"
+                data-suffix="B+"
+                data-decimals="1"
+                class="stat-number text-4xl text-accent md:text-5xl"
+              >
+                ${(visibilityTotals.total / 1000).toFixed(1)}B+
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Right 40% — demand anchors stack */}
+      <div class="md:col-span-5">
+        <span class="eyebrow text-bone-dim">Demand Anchors</span>
+        <ul class="mt-8 flex flex-col">
+          {demandAnchors.map((anchor, i) => (
+            <li
+              data-anchor
+              class="reveal border-t border-ink-300 last:border-b last:border-ink-300"
+              style={`transition-delay: ${i * 80}ms;`}
+            >
+              {/* Trigger row — full-width button */}
+              <button
+                data-anchor-trigger
+                aria-expanded="false"
+                class="flex w-full items-center justify-between gap-4 py-6 text-left md:py-7"
+              >
+                <span class="font-serif text-lg text-bone transition-colors duration-200 md:text-xl">
+                  {anchor.title}
+                </span>
+                <div class="flex shrink-0 items-center gap-3">
+                  <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span data-anchor-label class="font-sans text-[9px] uppercase tracking-label text-bone-dim/60">
+                    expand
+                  </span>
+                  {/* Plus → minus indicator */}
+                  <span data-anchor-icon class="relative block h-3 w-3 text-accent" aria-hidden="true">
+                    <span class="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-current"></span>
+                    <span data-anchor-vbar class="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 origin-center bg-current"></span>
+                  </span>
+                </div>
+              </button>
+
+              {/* Collapsible body */}
+              <div data-anchor-body class="overflow-hidden" style="height:0">
+                <div data-anchor-inner class="pb-6">
+                  <p class="text-sm text-bone-muted leading-relaxed">{anchor.detail}</p>
+                  <p class="mt-3 text-sm text-bone leading-relaxed">{anchor.expanded}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>

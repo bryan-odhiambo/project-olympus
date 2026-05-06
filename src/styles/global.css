@@ -1,0 +1,253 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Local font faces ──────────────────────────────────────────────
+   Real font files live in /public/fonts. */
+
+/* Roboto Slab Variable (Apache 2.0) — heading slab serif.
+   Self-hosted. Stand-in for Adelle until a TypeTogether license is procured. */
+@font-face {
+  font-family: "Roboto Slab Variable";
+  src: url("/fonts/RobotoSlab-Variable.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* DM Sans Variable (Google Fonts, OFL) — body text. Self-hosted. */
+@font-face {
+  font-family: "DM Sans Variable";
+  src: url("/fonts/DMSans-Variable.woff2") format("woff2-variations");
+  font-weight: 100 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DM Sans Variable";
+  src: url("/fonts/DMSans-Variable-Italic.woff2") format("woff2-variations");
+  font-weight: 100 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    --accent: #C4551E;
+    --accent-glow: #EC9C6B;
+    --bone: #FAF3E8;
+    --ink: #051826;
+    --ink-50: #07283B;
+  }
+
+  html {
+    background-color: theme(colors.ink.0);
+    color: theme(colors.bone.DEFAULT);
+    font-family: theme(fontFamily.sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  body {
+    @apply bg-ink-0 text-bone min-h-screen;
+    /* Subtle warm radial atmosphere — terracotta glow at the top edge,
+       deeper navy bleed at the bottom. Never gradient-as-decor; this is
+       the slight room-light feel that keeps a flat dark page from feeling
+       lifeless. */
+    background-image:
+      radial-gradient(1200px 800px at var(--g1x, 80%) var(--g1y, -20%), rgba(196, 85, 30, 0.08), transparent 60%),
+      radial-gradient(900px 600px at var(--g2x, -10%) var(--g2y, 135%), rgba(7, 40, 59, 0.5), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background-color: theme(colors.accent.DEFAULT);
+    color: theme(colors.bone.DEFAULT);
+  }
+
+  .nums {
+    font-feature-settings: "tnum" 1, "lnum" 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+}
+
+@layer components {
+  .eyebrow {
+    @apply font-sans text-xs font-medium uppercase text-bone-muted;
+    letter-spacing: theme(letterSpacing.label);
+  }
+
+  .hairline {
+    @apply border-t border-ink-300;
+  }
+
+  .shell {
+    @apply mx-auto w-full max-w-shell px-6 md:px-10 lg:px-16;
+  }
+
+  .stat-number {
+    @apply font-sans nums text-bone;
+    font-variant-numeric: tabular-nums lining-nums;
+    letter-spacing: -0.04em;
+  }
+
+  /* Accent rule — terracotta hairline drawn under headline numbers */
+  .accent-rule {
+    @apply block bg-accent;
+    height: 1px;
+    transform-origin: left center;
+  }
+
+  /* Pull quote — upright slab with hanging accent quote marks.
+     We avoid italic because Roboto Slab Variable ships no italics
+     and would fall through to Georgia, breaking the typographic system. */
+  .pull-quote {
+    @apply font-serif text-bone;
+    font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+    line-height: 1.18;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer utilities {
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    will-change: opacity, transform;
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition:
+      opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1),
+      transform 0.9s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+/* ── Sticky section label ───────────────────────────────────────────── */
+#section-label {
+  transition: opacity 0.35s ease;
+}
+
+/* ── Capital stack segment micro-interactions ───────────────────────── */
+[data-stack-segment] {
+  cursor: pointer;
+  /* Only transition filter/opacity — leave transform to GSAP */
+  transition: filter 0.25s ease, opacity 0.25s ease;
+}
+[data-stack-segment][data-stack-active="true"] {
+  filter: brightness(1.18);
+}
+[data-stack-segment][data-stack-active="false"] {
+  opacity: 0.32;
+}
+[data-stack-detail] {
+  transition: border-color 0.25s ease, background-color 0.25s ease;
+}
+[data-stack-detail][data-stack-active="true"] {
+  border-color: var(--accent) !important;
+  background-color: rgba(196, 85, 30, 0.06);
+}
+
+/* ── PDF / Print export ─────────────────────────────────────────────── */
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ① Collapse GSAP pin-spacers — they hold scroll distance as height.
+        display:contents removes the spacer from layout while keeping
+        the section inside it in normal document flow. */
+  .pin-spacer {
+    display: contents !important;
+  }
+
+  /* ② Each section = exactly one page.
+        height:100vh in @media print means 100% of the physical page height.
+        overflow:hidden clips any content that would otherwise bleed onto a
+        second page. This is the reliable CSS-only guarantee — no JS needed. */
+  section {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: 100vh !important;
+    overflow: hidden !important;
+    transform: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  /* ③ Scale section content to 80% so even the tallest sections fit within
+        one page. zoom (unlike transform:scale) shrinks layout dimensions, so
+        the scaled content genuinely occupies less height in flow.
+        80% means sections up to ~1320px natural height fit on a 1056px page.
+        Applied to direct children (always .shell) so nested zooms don't stack. */
+  section:not([data-disclosure]) > * {
+    zoom: 0.72;
+  }
+
+  /* ④ Disclosure has too much legal text to fit on one page — let it flow
+        naturally across as many pages as it needs. */
+  [data-disclosure] {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  /* ⑤ Force all animated elements to their final visible state */
+  .reveal,
+  .reveal.is-visible,
+  [data-stack-segment],
+  [data-floor-bar],
+  [data-stat],
+  [data-stat-rule],
+  [data-snapshot-thesis] {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  /* ⑥ Hide interactive chrome */
+  #scroll-progress,
+  #section-nav,
+  #section-label,
+  [data-print-btn],
+  [data-hero-chevron] {
+    display: none !important;
+  }
+
+  /* ⑦ Drop the radial gradient — prints as a murky smear on most printers.
+        The solid ink-0 background is sufficient. */
+  body {
+    background-image: none !important;
+    background-attachment: scroll;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal,
+  .reveal.is-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}

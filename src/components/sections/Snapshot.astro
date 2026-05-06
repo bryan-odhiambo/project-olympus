@@ -1,0 +1,91 @@
+---
+import { snapshot, meta } from "../../content/deck-data";
+---
+
+<section
+  data-snapshot
+  class="relative w-full bg-ink-0 py-10 md:py-12"
+  aria-label="Investment snapshot — four headline figures"
+>
+  <div class="shell">
+    {/* Section header */}
+    <div class="mb-8 flex flex-col gap-3 md:mb-10 md:flex-row md:items-start md:justify-between">
+      <div>
+        <span class="eyebrow">II · The Snapshot</span>
+        <h2 class="mt-4 max-w-[18ch] font-serif text-headline tracking-tightest">
+          The investment, in four numbers.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:pt-20">
+        Validated by a Grant Thornton Quality of Earnings analysis.
+        FY25A actuals form the entry basis for all forward scenarios.
+      </p>
+    </div>
+
+    {/* Asymmetric 12-col grid: stats span 7-5-7-5 across two rows */}
+    <div class="grid grid-cols-1 gap-x-10 gap-y-8 md:grid-cols-12 md:gap-y-10">
+      {snapshot.map((s, i) => {
+        // Asymmetric layout — alternating column spans
+        const layouts = [
+          "md:col-span-7", // Revenue, large left
+          "md:col-span-5", // EBITDA, right column
+          "md:col-span-7", // Backlog, left column (aligned with Revenue)
+          "md:col-span-5", // Multiple, right column (aligned with EBITDA)
+        ];
+        return (
+          <div
+            class={`relative ${layouts[i]}`}
+            data-stat
+            data-target={s.value}
+            data-decimals={"decimals" in s ? s.decimals : 0}
+            data-prefix={s.prefix ?? ""}
+            data-suffix={s.suffix ?? ""}
+          >
+            {/* Index marker */}
+            <span class="eyebrow mb-6 block text-bone-dim">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+
+            {/* Big number */}
+            <div
+              data-stat-number
+              class="stat-number text-[clamp(2rem,4vw,3rem)] md:text-[clamp(2.5rem,5vw,3.75rem)]"
+            >
+              {s.prefix ?? ""}{("decimals" in s ? s.value.toFixed(s.decimals as number) : s.value)}{s.suffix ?? ""}
+            </div>
+
+            {/* Gold accent line — animated draw via scaleX */}
+            <span
+              data-stat-rule
+              class="accent-rule mt-2 w-24 origin-left scale-x-0"
+              aria-hidden="true"
+            ></span>
+
+            {/* Label + sub */}
+            <div class="mt-6 flex flex-col gap-1.5">
+              <span class="font-serif text-xl text-bone md:text-2xl">
+                {s.label}
+              </span>
+              <span class="font-sans text-xs uppercase text-bone-muted tracking-label">
+                {s.sub}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+
+    {/* Thesis line — italic serif, draws closing breath under the numbers */}
+    <div
+      data-snapshot-thesis
+      class="mt-4 max-w-[58ch] border-t border-ink-300 pt-5 md:mt-6"
+    >
+      <p class="font-serif italic text-bone text-xl md:text-2xl leading-snug">
+        {meta.thesis}
+      </p>
+      <p class="mt-4 font-sans text-[11px] uppercase text-bone-dim tracking-label">
+        Source: Grant Thornton Quality of Earnings, April 2026
+      </p>
+    </div>
+  </div>
+</section>

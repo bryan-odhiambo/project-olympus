@@ -1,0 +1,437 @@
+---
+import { scenarios } from "../../content/deck-data";
+
+// ─── Returns model ────────────────────────────────────────────────────
+// Equity tranche: $50M of the $100M structured capital raise.
+// Remaining $50M = senior / mezz debt repaid during hold or at exit.
+// Exit: 7× FY30E EBITDA. Hold: 5 years (FY25A → FY30E).
+const EQUITY_INVESTED = 50;   // $M
+const NET_DEBT_AT_EXIT = 50;  // $M remaining debt
+const HOLD_YEARS = 5;
+const EXIT_MULTIPLE = 7;
+
+function computeReturns(finalEbitda: number) {
+  const exitEV   = EXIT_MULTIPLE * finalEbitda;
+  const exitEq   = exitEV - NET_DEBT_AT_EXIT;
+  const moic     = exitEq / EQUITY_INVESTED;
+  const irr      = (Math.pow(moic, 1 / HOLD_YEARS) - 1) * 100;
+  return {
+    exitEV : parseFloat(exitEV.toFixed(1)),
+    moic   : parseFloat(moic.toFixed(1)),
+    irr    : Math.round(irr),
+  };
+}
+
+const returnsBase          = computeReturns(scenarios.base.finalEbitda);
+const returnsUnderwritten  = computeReturns(scenarios.underwritten.finalEbitda);
+const returnsUpside        = computeReturns(scenarios.upside.finalEbitda);
+
+const returnsPayload = JSON.stringify({
+  base         : returnsBase,
+  underwritten : returnsUnderwritten,
+  upside       : returnsUpside,
+});
+
+// ─── Chart series payload ─────────────────────────────────────────────
+// Build the data payload that the client script will read
+const payload = JSON.stringify({
+  base: {
+    revenue: scenarios.base.revenue,
+    ebitda: scenarios.base.ebitda,
+    finalRevenue: scenarios.base.finalRevenue,
+    finalEbitda: scenarios.base.finalEbitda,
+    name: scenarios.base.name,
+    description: scenarios.base.description,
+  },
+  underwritten: {
+    revenue: scenarios.underwritten.revenue,
+    ebitda: scenarios.underwritten.ebitda,
+    finalRevenue: scenarios.underwritten.finalRevenue,
+    finalEbitda: scenarios.underwritten.finalEbitda,
+    name: scenarios.underwritten.name,
+    description: scenarios.underwritten.description,
+  },
+  upside: {
+    revenue: scenarios.upside.revenue,
+    ebitda: scenarios.upside.ebitda,
+    finalRevenue: scenarios.upside.finalRevenue,
+    finalEbitda: scenarios.upside.finalEbitda,
+    name: scenarios.upside.name,
+    description: scenarios.upside.description,
+  },
+});
+
+// Server-side build of the initial Base Case path so the chart paints
+// instantly on first byte, even before JS executes.
+//
+// Dual Y-axis: revenue on the left (0–500M), EBITDA on the right (0–60M).
+// Without this split the EBITDA line would render as a near-baseline
+// hairline since FY30 EBITDA is ~10% of FY30 revenue.
+const W = 1000;
+const H = 360;
+const PAD_X = 70;
+const PAD_Y = 40;
+const innerW = W - PAD_X * 2;
+const innerH = H - PAD_Y * 2;
+const Y_REV_MAX = 500;
+const Y_EBI_MAX = 60;
+const xFor = (i: number, count: number) => PAD_X + (innerW * i) / (count - 1);
+const yForRev = (v: number) => PAD_Y + innerH - (v / Y_REV_MAX) * innerH;
+const yForEbi = (v: number) => PAD_Y + innerH - (v / Y_EBI_MAX) * innerH;
+
+const buildLine = (
+  values: readonly number[],
+  yMap: (v: number) => number,
+) =>
+  values
+    .map((v, i) => `${i === 0 ? "M" : "L"} ${xFor(i, values.length).toFixed(2)} ${yMap(v).toFixed(2)}`)
+    .join(" ");
+
+const buildArea = (
+  values: readonly number[],
+  yMap: (v: number) => number,
+) => {
+  const top = buildLine(values, yMap);
+  const last = xFor(values.length - 1, values.length).toFixed(2);
+  const first = xFor(0, values.length).toFixed(2);
+  const baseY = yMap(0).toFixed(2);
+  return `${top} L ${last} ${baseY} L ${first} ${baseY} Z`;
+};
+
+const initialRev = buildLine(scenarios.base.revenue, yForRev);
+const initialEbi = buildLine(scenarios.base.ebitda, yForEbi);
+const initialRevArea = buildArea(scenarios.base.revenue, yForRev);
+const initialEbiArea = buildArea(scenarios.base.ebitda, yForEbi);
+
+// Gridlines at consistent screen heights — the labels on each side
+// show the corresponding revenue + EBITDA value at that line.
+const gridSteps = [
+  { rev: 100, ebi: 12 },
+  { rev: 200, ebi: 24 },
+  { rev: 300, ebi: 36 },
+  { rev: 400, ebi: 48 },
+  { rev: 500, ebi: 60 },
+];
+
+// Pre-compute label positions as % of SVG height so HTML labels can be
+// positioned to match the gridlines regardless of the container height.
+const gridLabelPcts = gridSteps.map((s) => ({
+  ...s,
+  pct: +((yForRev(s.rev) / H) * 100).toFixed(2),
+}));
+// % that PAD_X represents of total SVG width — used for X-label flex padding.
+const padXPct = +((PAD_X / W) * 100).toFixed(2);
+---
+
+<section
+  data-scenario
+  data-series={payload}
+  data-returns={returnsPayload}
+  class="relative w-full bg-ink-0 py-10 md:py-12"
+  aria-label="Scenario analysis: Base, Underwritten, Upside cases"
+>
+  <div class="shell">
+    {/* Section header */}
+    <div class="mb-6 grid grid-cols-1 gap-4 md:grid-cols-12">
+      <div class="md:col-span-7">
+        <span class="eyebrow">VI · The Numbers</span>
+        <h2 class="mt-2 max-w-[22ch] font-serif text-headline tracking-tightest">
+          Three scenarios. One disciplined entry.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:col-span-5 md:self-end">
+        Projected financial performance, FY26E – FY30E. All scenarios anchor to
+        Grant Thornton-verified FY25A actuals. Exit modeled at 7x FY30E EBITDA.
+      </p>
+    </div>
+
+    {/* Scenario toggle */}
+    <div
+      class="mb-5 flex flex-col items-stretch gap-px overflow-hidden border border-ink-300 md:inline-flex md:flex-row"
+      role="group"
+      aria-label="Select scenario"
+    >
+      {(["base", "underwritten", "upside"] as const).map((key) => {
+        const s = scenarios[key];
+        return (
+          <button
+            type="button"
+            data-scenario-btn={key}
+            data-active={key === "base"}
+            aria-pressed={key === "base"}
+            class="group relative flex items-baseline gap-3 bg-ink-50 px-5 py-2.5 text-left transition-colors duration-300 hover:bg-ink-100 data-[active=true]:bg-bone data-[active=true]:text-ink-0 md:px-7"
+          >
+            <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim group-data-[active=true]:text-ink-0/60">
+              {key === "base" ? "01" : key === "underwritten" ? "02" : "03"}
+            </span>
+            <span class="font-serif text-base md:text-lg">{s.name}</span>
+          </button>
+        );
+      })}
+    </div>
+
+    {/* Headline projection numbers — morph on scenario change */}
+    <div class="mb-4 grid grid-cols-1 gap-6 border-t border-ink-300 pt-5 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <span class="eyebrow text-bone-dim">Revenue · FY30E</span>
+        <div
+          data-scenario-rev-label
+          data-current={scenarios.base.finalRevenue}
+          class="stat-number mt-1 text-[clamp(2rem,3.5vw,2.8rem)] leading-none text-bone"
+        >
+          ${scenarios.base.finalRevenue}M
+        </div>
+      </div>
+      <div class="md:col-span-5">
+        <span class="eyebrow text-bone-dim">Adj. EBITDA · FY30E</span>
+        <div
+          data-scenario-ebitda-label
+          data-current={scenarios.base.finalEbitda}
+          class="stat-number mt-1 text-[clamp(2rem,3.5vw,2.8rem)] leading-none text-accent"
+        >
+          ${scenarios.base.finalEbitda.toFixed(1)}M
+        </div>
+      </div>
+      <div class="md:col-span-2 md:flex md:flex-col md:justify-end">
+        <p
+          data-scenario-desc
+          class="text-xs text-bone-muted leading-relaxed font-sans"
+        >
+          {scenarios.base.description}
+        </p>
+      </div>
+    </div>
+
+    {/* Chart */}
+    <div class="relative w-full overflow-hidden rounded-lg border border-ink-300 bg-ink-50 px-2 py-2 md:px-4 md:py-3">
+
+      {/* SVG wrapper — Y-axis labels float over each side, matched to gridline % */}
+      <div class="relative h-[240px] md:h-[270px] w-full">
+
+        {/* Left Y-labels (Revenue) — right-aligned, ending exactly at the
+            gridline left endpoint (padXPct % from left edge) */}
+        {gridLabelPcts.map((s) => (
+          <span
+            class="pointer-events-none absolute font-sans text-[10px] text-[#B8C4CC]"
+            style={`top:${s.pct}%;left:${padXPct}%;transform:translateY(-50%) translateX(calc(-100% - 6px))`}
+          >
+            ${s.rev}
+          </span>
+        ))}
+
+        {/* SVG: gridlines + data only — no <text> so preserveAspectRatio="none"
+            distortion is invisible (pure geometry, no glyphs). */}
+        <svg
+          data-scenario-svg
+          viewBox={`0 0 ${W} ${H}`}
+          class="block h-full w-full"
+          role="img"
+          aria-labelledby="scenario-title scenario-desc"
+          preserveAspectRatio="none"
+        >
+          <title id="scenario-title">Revenue and EBITDA projection by scenario</title>
+          <desc id="scenario-desc">
+            Line chart comparing projected revenue and EBITDA across FY26E to FY30E
+            for the Base, Underwritten, and Upside scenarios.
+          </desc>
+
+          {/* Gridlines — no text labels (those live in HTML) */}
+          {gridSteps.map((step) => (
+            <line
+              x1={PAD_X}
+              y1={yForRev(step.rev)}
+              x2={W - PAD_X}
+              y2={yForRev(step.rev)}
+              stroke="#1F4D63"
+              stroke-width="1"
+              stroke-dasharray="2 4"
+            />
+          ))}
+
+          {/* Baseline */}
+          <line
+            x1={PAD_X}
+            y1={yForRev(0)}
+            x2={W - PAD_X}
+            y2={yForRev(0)}
+            stroke="#2E5E73"
+            stroke-width="1"
+          />
+
+          {/* Revenue area + line */}
+          <path data-scenario-rev-area d={initialRevArea} fill="rgba(250,243,232,0.05)" />
+          <path
+            data-scenario-rev
+            d={initialRev}
+            fill="none"
+            stroke="#FAF3E8"
+            stroke-width="1.5"
+            stroke-linecap="square"
+            stroke-linejoin="miter"
+          />
+
+          {/* EBITDA area + line */}
+          <path data-scenario-ebitda-area d={initialEbiArea} fill="rgba(196,85,30,0.12)" />
+          <path
+            data-scenario-ebitda
+            d={initialEbi}
+            fill="none"
+            stroke="#C4551E"
+            stroke-width="2"
+            stroke-linecap="square"
+            stroke-linejoin="miter"
+          />
+
+          {/* Hover cursor — pure geometry, no text (immune to SVG stretch) */}
+          <g data-chart-cursor aria-hidden="true" style="opacity:0;pointer-events:none">
+            {/* Hairline vertical rule */}
+            <line
+              data-cursor-line
+              x1="500" y1={PAD_Y} x2="500" y2={yForRev(0)}
+              stroke="rgba(250,243,232,0.22)" stroke-width="1"
+            />
+            {/* Revenue — halo ring + solid dot */}
+            <circle data-cursor-ring-rev cx="500" cy="208" r="8"
+              fill="rgba(250,243,232,0.08)" stroke="rgba(250,243,232,0.28)" stroke-width="1"/>
+            <circle data-cursor-dot-rev  cx="500" cy="208" r="3"
+              fill="#FAF3E8"/>
+            {/* EBITDA — halo ring + solid dot */}
+            <circle data-cursor-ring-ebi cx="500" cy="208" r="8"
+              fill="rgba(196,85,30,0.12)" stroke="rgba(196,85,30,0.45)" stroke-width="1"/>
+            <circle data-cursor-dot-ebi  cx="500" cy="208" r="3"
+              fill="#C4551E"/>
+          </g>
+        </svg>
+
+        {/* Tooltip card — left-anchored accent stripe, GSAP-faded */}
+        <div
+          data-chart-tooltip
+          class="pointer-events-none absolute z-20 min-w-[156px] overflow-hidden shadow-2xl"
+          style="top:0;opacity:0;display:none"
+        >
+          {/* Terracotta left stripe */}
+          <div class="absolute inset-y-0 left-0 w-0.5 bg-accent"></div>
+          <div class="border border-bone/[0.08] bg-ink-0/[0.97] pl-4 pr-4 py-3.5 backdrop-blur-md">
+            <p data-tooltip-year
+              class="mb-3 font-sans text-[9px] uppercase tracking-label text-bone-dim">
+            </p>
+            <div class="space-y-2.5">
+              <div>
+                <p class="mb-0.5 font-sans text-[8px] uppercase tracking-label text-bone-dim">Revenue</p>
+                <p data-tooltip-rev class="nums font-sans text-[13px] font-medium text-bone"></p>
+              </div>
+              <div>
+                <p class="mb-0.5 font-sans text-[8px] uppercase tracking-label text-accent/60">Adj. EBITDA</p>
+                <p data-tooltip-ebi class="nums font-sans text-[13px] font-medium text-accent"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Y-labels (EBITDA) — left-aligned, starting at the
+            gridline right endpoint (padXPct % from right edge) */}
+        {gridLabelPcts.map((s) => (
+          <span
+            class="pointer-events-none absolute font-sans text-[10px] text-[#C4551E]"
+            style={`top:${s.pct}%;right:${padXPct}%;transform:translateY(-50%) translateX(calc(100% + 6px))`}
+          >
+            ${s.ebi}
+          </span>
+        ))}
+
+      </div>
+
+      {/* X-axis labels — pulled up to compensate for SVG's internal bottom padding */}
+      <div
+        class="flex justify-between -mt-3"
+        style={`padding-left:${padXPct}%;padding-right:${padXPct}%`}
+      >
+        {scenarios.years.map((year) => (
+          <span class="font-sans text-[10px] uppercase tracking-[0.1em] text-[#B8C4CC]">
+            {year}
+          </span>
+        ))}
+      </div>
+
+      {/* Legend */}
+      <div class="mt-2 flex flex-col gap-2 px-2 md:flex-row md:items-center md:justify-between md:px-4">
+        <div class="flex items-center gap-8">
+          <div class="flex items-center gap-2.5">
+            <span class="block h-px w-6 bg-bone"></span>
+            <span class="font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Revenue
+            </span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="block h-[2px] w-6 bg-accent"></span>
+            <span class="font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Adj. EBITDA
+            </span>
+          </div>
+        </div>
+        <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim">
+          Left axis: revenue ($M) &nbsp;·&nbsp; Right axis: EBITDA ($M)
+        </span>
+      </div>
+    </div>
+
+    {/* Returns model card — updates live with scenario toggle */}
+    <div
+      data-returns-card
+      data-returns={returnsPayload}
+      class="mt-2 overflow-hidden rounded-lg border border-accent/25"
+    >
+      {/* Card header */}
+      <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-accent/20 bg-accent/[0.07] px-5 py-2">
+        <span class="eyebrow text-accent">Projected Returns</span>
+        <span data-returns-scenario-label class="font-sans text-[10px] text-bone-muted">
+          Base Case
+        </span>
+        <span class="ml-auto font-sans text-[10px] text-bone-dim">
+          7× exit · $50M equity tranche · 5yr hold
+        </span>
+      </div>
+
+      {/* Three metric cells */}
+      <div class="grid grid-cols-3 divide-x divide-ink-300">
+        <div class="flex flex-col gap-1 bg-ink-50 px-4 py-4 md:px-5">
+          <span class="eyebrow text-bone-dim">Exit EV</span>
+          <div
+            data-returns-ev
+            data-current={returnsBase.exitEV}
+            class="stat-number text-[clamp(1.2rem,1.8vw,1.6rem)] text-bone"
+          >
+            ${returnsBase.exitEV.toFixed(1)}M
+          </div>
+          <span class="font-sans text-[10px] text-bone-dim">@ 7× FY30E EBITDA</span>
+        </div>
+        <div class="flex flex-col gap-1 bg-ink-50 px-4 py-4 md:px-5">
+          <span class="eyebrow text-bone-dim">MOIC</span>
+          <div
+            data-returns-moic
+            data-current={returnsBase.moic}
+            class="stat-number text-[clamp(1.2rem,1.8vw,1.6rem)] text-accent"
+          >
+            {returnsBase.moic.toFixed(1)}x
+          </div>
+          <span class="font-sans text-[10px] text-bone-dim">Gross return on equity</span>
+        </div>
+        <div class="flex flex-col gap-1 bg-ink-50 px-4 py-4 md:px-5">
+          <span class="eyebrow text-bone-dim">IRR</span>
+          <div
+            data-returns-irr
+            data-current={returnsBase.irr}
+            class="stat-number text-[clamp(1.2rem,1.8vw,1.6rem)] text-accent"
+          >
+            ~{returnsBase.irr}%
+          </div>
+          <span class="font-sans text-[10px] text-bone-dim">5-year hold</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-2 font-sans text-[11px] uppercase tracking-label text-bone-dim">
+      {scenarios.exitNote}
+    </p>
+  </div>
+</section>

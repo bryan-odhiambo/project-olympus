@@ -1,0 +1,145 @@
+---
+import { meta } from "../../content/deck-data";
+---
+
+<section
+  data-hero
+  class="relative flex min-h-screen w-full flex-col justify-between overflow-hidden bg-ink-0 pt-12 pb-10"
+  aria-label="Project Olympus — Hero"
+>
+  {/* Top hairline frame — brand mark + classification.
+      items-start so the top of the logo and the top of the eyebrow
+      text on the right land on the same horizontal line. */}
+  <div class="shell flex items-start justify-between">
+    <a href="/" aria-label="CrestHaven Capital — home" class="block">
+      <img
+        src="/images/cresthaven-logo.png"
+        alt="CrestHaven Capital"
+        width="298"
+        height="176"
+        class="h-10 w-auto md:h-16"
+        decoding="async"
+        fetchpriority="high"
+      />
+    </a>
+    <span class="eyebrow hidden md:inline">{meta.classification} · {meta.asOf}</span>
+  </div>
+
+  {/* Main lockup — asymmetric, biased to the lower-left.
+      The heading carries its own narrow max-width so "Project / Olympus"
+      breaks cleanly to two lines; the paragraph below uses its own,
+      wider max-width and is not clamped by the heading container. */}
+  <div class="shell flex flex-1 items-end pb-10">
+    <div class="relative">
+      <span
+        class="eyebrow mb-8 block"
+        aria-hidden="true"
+      >
+        I · An Investment Opportunity
+      </span>
+
+      <h1
+        data-hero-lockup
+        class="max-w-[18ch] font-serif text-display text-bone leading-[0.92] tracking-tightest md:max-w-[22ch]"
+      >
+        Project<br />Olympus<span class="text-accent">.</span>
+      </h1>
+
+      <p
+        data-hero-sub
+        class="mt-8 max-w-[52ch] text-base md:text-lg text-bone-muted leading-relaxed font-sans"
+      >
+        {meta.subtitle}. Acquisition of <span class="text-bone">Greenpoint Technologies</span> — a
+        $175M enterprise value carve-out anchored by $800M+ contracted backlog.
+      </p>
+    </div>
+  </div>
+
+  {/* Bottom rail — confidentiality notice + scroll cue */}
+  <div class="shell flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
+    <div class="flex flex-col gap-1">
+      <span class="eyebrow">{meta.asOf}</span>
+      <span class="font-sans text-xs text-bone-dim">
+        Investor Distribution · {meta.classification}
+      </span>
+    </div>
+
+    <div
+      data-hero-chevron
+      class="flex flex-col items-center gap-3 self-center md:self-end"
+      aria-hidden="true"
+    >
+      <span class="eyebrow text-bone-dim">Scroll</span>
+      <svg
+        width="14"
+        height="22"
+        viewBox="0 0 14 22"
+        fill="none"
+        class="text-accent animate-[bob_2.6s_ease-in-out_infinite]"
+      >
+        <path
+          d="M7 0V20M7 20L1 14M7 20L13 14"
+          stroke="currentColor"
+          stroke-width="1"
+          stroke-linecap="square"
+        />
+      </svg>
+    </div>
+  </div>
+
+  {/* Hero plane — WebGL render of plane-a340.glb via Three.js. */}
+  <canvas
+    data-hero-plane-canvas
+    aria-hidden="true"
+    class="hero-plane-canvas pointer-events-auto absolute top-12 hidden h-[480px] w-[58%] cursor-crosshair select-none md:top-16 md:block md:h-[520px] lg:top-20 lg:h-[600px] lg:w-[54%] xl:h-[680px] xl:w-[50%]"
+  ></canvas>
+
+  {/* Solid-reveal canvas — same scene rendered with opaque warm material,
+      clipped to a circle around the cursor via clip-path updated in JS */}
+  <canvas
+    id="solid-plane-canvas"
+    aria-hidden="true"
+    class="hero-plane-canvas pointer-events-none absolute top-12 hidden h-[480px] w-[58%] select-none md:top-16 md:block md:h-[520px] lg:top-20 lg:h-[600px] lg:w-[54%] xl:h-[680px] xl:w-[50%]"
+  ></canvas>
+
+  {/* Contrail canvas — stacks exactly over the WebGL canvas, 2-D particle trail */}
+  <canvas
+    id="contrail-canvas"
+    aria-hidden="true"
+    class="hero-plane-canvas pointer-events-none absolute top-12 hidden h-[480px] w-[58%] select-none md:top-16 md:block md:h-[520px] lg:top-20 lg:h-[600px] lg:w-[54%] xl:h-[680px] xl:w-[50%]"
+  ></canvas>
+</section>
+
+<style>
+  @keyframes bob {
+    0%, 100% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(6px); opacity: 0.5; }
+  }
+
+  /* Align canvas right edge with shell's right content edge at every breakpoint */
+  .hero-plane-canvas {
+    right: calc((100vw - min(100vw, 1440px)) / 2 + 2.5rem);
+  }
+  @media (min-width: 1024px) {
+    .hero-plane-canvas {
+      right: calc((100vw - min(100vw, 1440px)) / 2 + 4rem);
+    }
+  }
+</style>
+
+<script>
+  import { initHeroPlane3D } from "../../scripts/heroPlane3d";
+
+  function boot() {
+    const canvas = document.querySelector<HTMLCanvasElement>(
+      "[data-hero-plane-canvas]",
+    );
+    if (canvas) initHeroPlane3D(canvas);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
+</script>

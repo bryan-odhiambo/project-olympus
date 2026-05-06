@@ -1,0 +1,111 @@
+---
+import { trackRecord } from "../../content/deck-data";
+---
+
+<section
+  data-track
+  class="relative w-full bg-ink-0 py-24 md:py-32"
+  aria-label="Track Record"
+>
+  <div class="shell">
+    {/* Header */}
+    <div class="mb-20 grid grid-cols-1 gap-6 md:grid-cols-12">
+      <div class="md:col-span-7">
+        <span class="eyebrow">X · Track Record</span>
+        <h2 class="mt-4 max-w-[20ch] font-serif text-headline tracking-tightest">
+          Realized returns. Repeated playbook.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:col-span-5 md:self-end">
+        Collective investment performance across the principals' prior
+        platforms. MOIC reflects realized capital invested across exited
+        positions; active investments excluded from the realized figure.
+      </p>
+    </div>
+
+    {/* Headline MOIC */}
+    <div class="reveal mb-20 flex flex-col items-baseline gap-4 border-y border-ink-300 py-10 md:flex-row md:justify-between md:py-14">
+      <div>
+        <span class="eyebrow text-bone-dim">Realized MOIC</span>
+        <div class="stat-number mt-3 text-stat-lg text-accent">
+          {trackRecord.realizedMOIC}
+        </div>
+      </div>
+      <p class="max-w-[36ch] font-serif italic text-bone-muted md:text-right">
+        On realized capital invested across closed positions.
+      </p>
+    </div>
+
+    {/* Investment table */}
+    <div class="overflow-x-auto border border-ink-300">
+      <table class="w-full border-collapse text-left">
+        <thead>
+          <tr class="border-b border-ink-300 bg-ink-50">
+            <th class="px-5 py-4 font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Asset
+            </th>
+            <th class="px-5 py-4 font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Acquired
+            </th>
+            <th class="px-5 py-4 text-right font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Capital Invested
+            </th>
+            <th class="px-5 py-4 text-right font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              Proceeds
+            </th>
+            <th class="px-5 py-4 text-right font-sans text-[10px] uppercase tracking-label text-bone-muted">
+              MOIC
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {trackRecord.rows.map((row) => (
+            <tr class="border-b border-ink-300 last:border-b-0 transition-colors hover:bg-ink-50">
+              <td class="px-5 py-5">
+                <span class="font-serif text-base text-bone">{row.asset}</span>
+              </td>
+              <td class="px-5 py-5 font-sans text-sm text-bone-muted">
+                {row.acquired}
+              </td>
+              <td class="px-5 py-5 text-right">
+                <span class="nums font-sans text-base text-bone">
+                  {row.invested}
+                </span>
+              </td>
+              <td class="px-5 py-5 text-right">
+                <span class="nums font-sans text-base text-bone">
+                  {row.proceeds}
+                </span>
+              </td>
+              <td class="px-5 py-5 text-right">
+                <span class="nums font-sans text-base text-accent">
+                  {row.moic}
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {/* Awards strip */}
+    <div class="mt-20">
+      <div class="mb-8 flex items-baseline justify-between">
+        <h3 class="font-serif text-2xl text-bone md:text-3xl">
+          Industry Recognition
+        </h3>
+      </div>
+
+      <div class="grid grid-cols-1 gap-px overflow-hidden border border-ink-300 bg-ink-300 md:grid-cols-3">
+        {trackRecord.awards.map((award) => (
+          <article class="flex flex-col gap-4 bg-ink-50 p-7 md:p-8">
+            <span class="font-sans text-[10px] uppercase tracking-label text-accent">
+              {award.label}
+            </span>
+            <p class="text-base text-bone leading-relaxed">{award.detail}</p>
+          </article>
+        ))}
+      </div>
+    </div>
+  </div>
+</section>

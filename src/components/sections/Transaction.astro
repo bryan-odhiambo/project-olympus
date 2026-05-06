@@ -1,0 +1,218 @@
+---
+import { transaction } from "../../content/deck-data";
+
+const total       = transaction.enterpriseValue;
+const { comparables } = transaction;
+
+// Bar segment colors — terracotta gradient family
+const SEGMENT_COLORS = [
+  "#A14416", // Seller Note — deepest
+  "#C4551E", // Performance Earnout — primary
+  "#EC9C6B", // Structured Capital — peach (the "ask" piece, lightest/most prominent visually)
+] as const;
+---
+
+<section
+  data-transaction
+  class="relative w-full bg-ink-0 py-8 md:py-10"
+  aria-label="The Transaction — capital structure and investment thesis"
+>
+  <div class="shell">
+
+    {/* Header */}
+    <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-12">
+      <div class="md:col-span-7">
+        <span class="eyebrow">VII · The Transaction</span>
+        <h2 class="mt-2 max-w-[20ch] font-serif text-headline tracking-tightest">
+          The deal, in plain terms.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:col-span-5 md:self-end">
+        Carve-out stock purchase from Safran USA. Clean single-class common
+        equity. Open-architecture capital stack designed to optimize cost of
+        capital and control.
+      </p>
+    </div>
+
+    {/* Enterprise value + entry multiple */}
+    <div class="mb-4 flex items-end justify-between border-t border-ink-300 pt-4">
+      <div>
+        <span class="eyebrow text-bone-dim">Enterprise Value</span>
+        <div class="stat-number mt-2 text-[clamp(2.8rem,5vw,4.5rem)] leading-none text-bone">
+          ${total}M
+        </div>
+      </div>
+      <div class="hidden text-right md:block">
+        <span class="eyebrow text-bone-dim">Entry Multiple</span>
+        <div class="mt-2 font-sans nums text-xl text-accent">
+          ~6.4x FY26 EBITDA
+        </div>
+      </div>
+    </div>
+
+    {/* Capital stack bar — horizontal segments build on scroll */}
+    <div data-stack class="reveal">
+      <span class="eyebrow text-bone-dim">Capital Stack</span>
+
+      {/* Bar */}
+      <div
+        class="mt-3 flex h-10 w-full overflow-hidden rounded-lg border border-ink-300 bg-ink-50"
+        role="img"
+        aria-label={`Capital stack totaling $${total}M`}
+      >
+        {transaction.capitalStack.map((seg, i) => {
+          const pct = (seg.amount / total) * 100;
+          return (
+            <div
+              data-stack-segment
+              data-stack-index={i}
+              data-percent={pct}
+              class="relative flex origin-left items-center justify-start scale-x-0 px-4 transition-transform"
+              style={`width: ${pct}%; background-color: ${SEGMENT_COLORS[i]};`}
+            >
+              <span class="font-sans text-[10px] uppercase tracking-label text-ink-50">
+                {seg.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Segment breakdown */}
+      <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
+        {transaction.capitalStack.map((seg, i) => (
+          <div
+            data-stack-detail={i}
+            class="flex flex-col gap-1.5 border-t border-b border-ink-300 pt-3 pb-3"
+          >
+            <div class="flex items-center gap-2">
+              <span
+                class="block h-2 w-2 shrink-0"
+                style={`background-color: ${SEGMENT_COLORS[i]};`}
+                aria-hidden="true"
+              ></span>
+              <span class="font-sans text-[10px] uppercase tracking-label text-bone-muted">
+                {seg.label}
+              </span>
+            </div>
+            <div class="stat-number text-[clamp(1.8rem,3vw,2.6rem)] leading-none text-bone">
+              ${seg.amount}M
+            </div>
+            <p class="text-xs text-bone-muted leading-relaxed">{seg.detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Bottom two-column: Precedent Transactions (left) + Investment Thesis (right) */}
+    <div class="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
+
+      {/* Left — Comparable Transactions */}
+      <div class="reveal flex flex-col">
+        <div class="mb-2 flex items-baseline justify-between">
+          <span class="eyebrow text-bone-muted">Precedent Transactions</span>
+          <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim">
+            A&amp;D Carve-Outs
+          </span>
+        </div>
+
+        <div class="overflow-hidden rounded-lg border border-ink-300">
+          <table class="w-full border-collapse text-left">
+            <thead>
+              <tr class="border-b border-ink-300 bg-ink-50">
+                <th class="px-3 py-2 font-sans text-[10px] font-normal uppercase tracking-label text-bone-dim">Target</th>
+                <th class="hidden px-3 py-2 font-sans text-[10px] font-normal uppercase tracking-label text-bone-dim lg:table-cell">Acquirer</th>
+                <th class="px-3 py-2 font-sans text-[10px] font-normal uppercase tracking-label text-bone-dim text-right">Year</th>
+                <th class="hidden px-3 py-2 font-sans text-[10px] font-normal uppercase tracking-label text-bone-dim text-right lg:table-cell">EV</th>
+                <th class="px-3 py-2 font-sans text-[10px] font-normal uppercase tracking-label text-bone-dim text-right">EV / EBITDA</th>
+              </tr>
+            </thead>
+            <tbody>
+              {comparables.rows.map((row, i) => (
+                <tr class={i !== comparables.rows.length - 1 ? "border-b border-ink-300" : ""}>
+                  <td class="px-3 py-2 font-sans text-sm text-bone">{row.target}</td>
+                  <td class="hidden px-3 py-2 font-sans text-sm text-bone-muted lg:table-cell">{row.acquirer}</td>
+                  <td class="px-3 py-2 font-sans nums text-sm text-bone-muted text-right">{row.year}</td>
+                  <td class="hidden px-3 py-2 font-sans nums text-sm text-bone-muted text-right lg:table-cell">{row.ev}</td>
+                  <td class="px-3 py-2 font-sans nums text-sm text-bone text-right">{row.multiple}</td>
+                </tr>
+              ))}
+              {/* Median summary */}
+              <tr class="border-t border-ink-300 bg-ink-50">
+                <td colspan={4} class="px-3 py-2 font-sans text-[10px] uppercase tracking-label text-bone-muted">
+                  Precedent Median
+                </td>
+                <td class="px-3 py-2 font-sans nums text-base font-semibold text-bone text-right">
+                  {comparables.medianMultiple}
+                </td>
+              </tr>
+              {/* Project Olympus entry — highlighted in terracotta */}
+              <tr class="border-t border-accent/30 bg-accent/[0.06]">
+                <td colspan={4} class="px-3 py-2.5 font-sans text-sm font-medium text-bone">
+                  Project Olympus — CrestHaven Entry
+                </td>
+                <td class="px-3 py-2.5 font-sans nums text-base font-bold text-accent text-right">
+                  {comparables.entryMultiple}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p class="mt-1.5 font-sans text-[10px] leading-relaxed text-bone-dim">
+          Sources: {comparables.source}
+        </p>
+      </div>
+
+      {/* Right — Investment Thesis */}
+      <div class="flex flex-col">
+        <div class="mb-2 flex items-baseline justify-between">
+          <span class="eyebrow text-bone-muted">Investment Thesis</span>
+          <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim">
+            Four pillars
+          </span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-ink-300 bg-ink-300">
+          {transaction.thesis.map((pillar, i) => (
+            <article class="reveal flex flex-col gap-2 bg-ink-50 p-3 md:p-4">
+              <div class="flex items-baseline gap-2">
+                <span class="font-sans nums font-semibold text-lg text-accent">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <h4 class="font-serif text-sm text-bone md:text-base">
+                  {pillar.title}
+                </h4>
+              </div>
+              <p class="text-xs text-bone-muted leading-relaxed line-clamp-4">
+                {pillar.body}
+              </p>
+            </article>
+          ))}
+        </div>
+      </div>
+
+    </div>
+
+    {/* Deal terms strip — full width below both columns */}
+    <div class="mt-3 grid grid-cols-2 overflow-hidden rounded-lg border border-ink-300 md:grid-cols-3 lg:grid-cols-6">
+      {transaction.dealTerms.map((term, i) => (
+        <div
+          class={`flex flex-col gap-1.5 p-3 md:p-4 ${
+            i !== transaction.dealTerms.length - 1
+              ? "border-b border-ink-300 md:border-b-0 md:[&:not(:nth-child(3n))]:border-r md:[&:not(:nth-child(3n))]:border-ink-300 lg:[&:not(:last-child)]:border-r"
+              : ""
+          }`}
+        >
+          <span class="font-sans text-[10px] uppercase tracking-label text-bone-muted">
+            {term.label}
+          </span>
+          <span class="font-sans nums text-sm text-bone md:text-base">
+            {term.value}
+          </span>
+        </div>
+      ))}
+    </div>
+
+  </div>
+</section>

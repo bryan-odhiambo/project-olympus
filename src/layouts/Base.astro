@@ -1,0 +1,63 @@
+---
+import "../styles/global.css";
+import { meta } from "../content/deck-data";
+import Nav from "../components/Nav.astro";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = `${meta.project} — ${meta.subtitle}`,
+  description = "An institutional carve-out investment opportunity. CrestHaven Capital. Strictly Private & Confidential.",
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#051826" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="description" content={description} />
+
+    <title>{title}</title>
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    {/* Preload critical-path faces — body (DM Sans) and heading (Roboto Slab).
+        crossorigin is required for woff2 preload to be honored. */}
+    <link
+      rel="preload"
+      href="/fonts/DMSans-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/RobotoSlab-Variable.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+  </head>
+  <body class="antialiased selection:bg-accent selection:text-bone">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-bone focus:font-sans focus:text-xs focus:uppercase focus:tracking-label"
+    >
+      Skip to content
+    </a>
+
+    <Nav />
+    <main id="main"><slot /></main>
+
+    <script>
+      import "../scripts/animations.ts";
+    </script>
+  </body>
+</html>

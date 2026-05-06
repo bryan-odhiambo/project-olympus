@@ -1,0 +1,78 @@
+---
+import { asset } from "../../content/deck-data";
+---
+
+<section
+  data-asset
+  class="relative w-full overflow-hidden bg-ink-0 py-8 md:py-10"
+  aria-label="The Asset — Greenpoint Technologies"
+>
+  <div class="shell">
+    {/* Header */}
+    <div class="mb-8 grid grid-cols-1 gap-6 md:grid-cols-12">
+      <div class="md:col-span-7">
+        <span class="eyebrow">V · The Asset</span>
+        <h2 class="mt-4 font-serif text-headline tracking-tightest">
+          {asset.shortName}.
+        </h2>
+      </div>
+      <p class="max-w-prose-tight text-sm text-bone-muted md:col-span-5 md:self-end">
+        {asset.intro}
+      </p>
+    </div>
+
+    {/* Pull quote — editorial center, two-line balance at desktop */}
+    <figure class="reveal mx-auto my-8 text-center md:my-10" style="white-space: nowrap;">
+      <blockquote class="pull-quote">
+        <span class="text-accent" aria-hidden="true">&ldquo;</span>{asset.pullQuote}<span class="text-accent" aria-hidden="true">&rdquo;</span>
+      </blockquote>
+    </figure>
+
+    {/* Aircraft side-elevation — live Three.js WebGL render */}
+    <div
+      class="reveal relative mx-auto my-12 w-full max-w-5xl md:my-14"
+      aria-hidden="true"
+    >
+      <canvas
+        data-asset-plane-canvas
+        class="block h-[220px] w-full md:h-[300px]"
+      ></canvas>
+
+      {/* Caption hairline */}
+      <div class="mt-6 flex items-center gap-6 text-bone-dim">
+        <span class="block h-px flex-1 bg-ink-300"></span>
+        <span class="font-sans text-[10px] uppercase tracking-label">
+          Airbus A340 · Boeing-class wide-body completion platform
+        </span>
+        <span class="block h-px flex-1 bg-ink-300"></span>
+      </div>
+    </div>
+
+    {/* 8-stat strip — 4-up grid on desktop, 2-up on mobile */}
+    <div class="mt-6 grid grid-cols-2 border-t border-ink-300 md:grid-cols-4">
+      {asset.stats.map((s, i) => (
+        <div
+          class={`flex flex-col gap-2 p-4 md:p-5 ${
+            i % 4 !== 3 ? "md:border-r md:border-ink-300" : ""
+          } ${i % 2 === 0 ? "border-r border-ink-300 md:border-r" : ""} border-b border-ink-300`}
+        >
+          <span class="font-sans text-[10px] uppercase tracking-label text-bone-muted">
+            {s.label}
+          </span>
+          <span class="font-sans nums text-xl text-bone md:text-2xl">
+            {s.value}
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { initAssetPlane3D } from "../../scripts/assetPlane3d";
+
+  const canvas = document.querySelector<HTMLCanvasElement>(
+    "[data-asset-plane-canvas]",
+  );
+  if (canvas) initAssetPlane3D(canvas);
+</script>

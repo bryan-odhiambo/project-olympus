@@ -1,0 +1,65 @@
+---
+import { disclosure } from "../../content/deck-data";
+---
+
+<section
+  data-disclosure
+  class="relative w-full bg-ink-0 pt-6 pb-20 md:pt-8 md:pb-28"
+  aria-label="Legal Disclosures"
+>
+  <div class="shell">
+    {/* Native <details> handles the toggle without JS — preserves keyboard
+        accessibility and works with reduced-motion automatically. */}
+    <details class="group border-y border-ink-300">
+      <summary
+        class="flex cursor-pointer list-none items-center justify-between gap-6 py-8 outline-none focus-visible:bg-ink-50 md:py-10"
+      >
+        <div class="flex items-baseline gap-6">
+          <span class="eyebrow">X · Disclosure</span>
+          <span class="font-serif text-lg text-bone md:text-xl">
+            View Disclosures
+          </span>
+        </div>
+        <span
+          class="flex items-center gap-3 font-sans text-[10px] uppercase tracking-label text-bone-muted transition-colors group-hover:text-accent"
+        >
+          <span class="hidden md:inline group-open:hidden">Expand</span>
+          <span class="hidden group-open:inline md:inline">Collapse</span>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            class="transition-transform duration-300 group-open:rotate-45"
+            aria-hidden="true"
+          >
+            <line x1="7" y1="0" x2="7" y2="14" stroke="currentColor" stroke-width="1" />
+            <line x1="0" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1" />
+          </svg>
+        </span>
+      </summary>
+
+      <div class="grid grid-cols-1 gap-10 pb-14 md:grid-cols-12 md:pb-20">
+        <div class="md:col-span-3">
+          <span class="font-sans text-[10px] uppercase tracking-label text-bone-dim">
+            Legal · Confidentiality · Forward-Looking Statements
+          </span>
+        </div>
+        <div class="flex max-w-prose-tight flex-col gap-5 md:col-span-9">
+          {disclosure.paragraphs.map((para) => (
+            <p class="text-xs text-bone-muted leading-relaxed md:text-[13px]">
+              {para}
+            </p>
+          ))}
+        </div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<style>
+  /* Hide the default disclosure triangle on Safari */
+  details > summary::-webkit-details-marker {
+    display: none;
+  }
+</style>
